@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.AspNetCore.Builder;
@@ -45,19 +46,31 @@ namespace User.API
 
         public void InitUserData(IApplicationBuilder app)
         {
-            using (var scope = app.ApplicationServices.CreateScope())
+            Thread.Sleep(5000);
+            Console.WriteLine("starting....");
+            try
             {
-                var userContext = scope.ServiceProvider.GetRequiredService<UserContext>();
-                userContext.Database.Migrate();
-                if (!userContext.Users.Any())
+                using (var scope = app.ApplicationServices.CreateScope())
                 {
-                    userContext.Users.Add(new AppUser()
+                    var userContext = scope.ServiceProvider.GetRequiredService<UserContext>();
+                    userContext.Database.Migrate();
+                    if (!userContext.Users.Any())
                     {
-                        Name = "jesse"
-                    });
-                    userContext.SaveChanges();
+                        userContext.Users.Add(new AppUser()
+                        {
+                            Name = "jesse"
+                        });
+                        userContext.SaveChanges();
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("will retry after 3 seconds");
+                Thread.Sleep(3000);
+                InitUserData(app);
+            }
+
         }
     }
 }
